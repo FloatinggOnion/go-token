@@ -193,6 +193,11 @@ func saveSecrets(secrets Secrets, passphrase string) error {
 	return nil
 }
 
+// deleteSecret removes a secret from the Secrets map.
+func deleteSecret(secrets Secrets, name string) {
+	delete(secrets, name)
+}
+
 func main() {
 	var passphrase string
 	fmt.Print("Enter passphrase to unlock the datafile: ")
@@ -251,24 +256,43 @@ func main() {
 		}
 
 		fmt.Println("\n1. Add new secret")
-		fmt.Println("2. Exit")
+		fmt.Println("2. Delete secret")
+		fmt.Println("3. Exit")
 		var choice int
 		fmt.Scanln(&choice)
 
-		if choice == 1 {
+		switch choice {
+		case 1: // Add new secret
 			var name, secret string
-			fmt.Print("Enter account name (No spaces should be included): ")
-			// fmt.Scanf("%q", &name)
+			fmt.Print("Enter account name: ")
 			fmt.Scanln(&name)
 			fmt.Print("Enter TOTP secret: ")
-			// fmt.Scanf("&q", &secret)
 			fmt.Scanln(&secret)
 			secrets[name] = secret
 			if err := saveSecrets(secrets, passphrase); err != nil {
 				fmt.Printf("Error saving secrets: %v\n", err)
 			}
-		} else if choice == 2 {
-			break
+
+		case 2: // Delete secret
+			var name string
+			fmt.Print("Enter account name to delete: ")
+			fmt.Scanln(&name)
+			if _, exists := secrets[name]; exists {
+				deleteSecret(secrets, name)
+				if err := saveSecrets(secrets, passphrase); err != nil {
+					fmt.Printf("Error saving secrets: %v\n", err)
+				} else {
+					fmt.Printf("Secret for %s deleted successfully.\n", name)
+				}
+			} else {
+				fmt.Printf("No secret found for %s.\n", name)
+			}
+
+		case 3: // Exit
+			return
+
+		default:
+			fmt.Println("Invalid choice. Please try again.")
 		}
 
 		time.Sleep(1 * time.Second)
