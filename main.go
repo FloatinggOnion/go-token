@@ -16,6 +16,7 @@ import (
 	"io/ioutil"
 	"math"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -31,7 +32,7 @@ type Secrets map[string]string
 
 // GenerateTOTP generates a TOTP code using the given secret.
 func GenerateTOTP(secret string) (string, error) {
-	key, err := base32.StdEncoding.WithPadding(base32.NoPadding).DecodeString(secret)
+	key, err := base32.StdEncoding.WithPadding(base32.NoPadding).DecodeString(strings.ToUpper(secret))
 	if err != nil {
 		return "", fmt.Errorf("failed to decode secret: %v", err)
 	}
@@ -48,7 +49,7 @@ func GenerateTOTP(secret string) (string, error) {
 	code := (int32(hash[offset])&0x7F)<<24 |
 		(int32(hash[offset+1])&0xFF)<<16 |
 		(int32(hash[offset+2])&0xFF)<<8 |
-		(int32(hash[offset+3])&0xFF)
+		(int32(hash[offset+3]) & 0xFF)
 
 	otp := int(code) % int(math.Pow10(digits))
 	format := fmt.Sprintf("%%0%dd", digits)
